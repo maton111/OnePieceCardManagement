@@ -14,9 +14,9 @@ jobs:
       uses: actions/checkout@v3
 
     - name: Setup .NET SDK
-      uses: actions/setup-dotnet@v4.3.1
+      uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 9.0
+        dotnet-version: 9.0.x
 
     - name: Publish project
       run: dotnet publish OnePieceCardManagement/OnePieceCardManagement.csproj -c Release -r linux-arm64 --self-contained -o OnePieceCardManagement/publish
