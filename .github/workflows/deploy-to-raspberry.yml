@@ -27,6 +27,7 @@ jobs:
         host: ${{ secrets.RPI_HOST }}
         username: ${{ secrets.RPI_USER }}
         key: ${{ secrets.RPI_SSH_KEY }}
+        port: 22
         source: "OnePieceCardManagement/publish/*"
         target: "/home/maton/opcm-be"
 
