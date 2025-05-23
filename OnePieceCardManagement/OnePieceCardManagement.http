@@ -1,0 +1,6 @@
+@OnePieceCardManagement_HostAddress = http://localhost:5262
+
+GET {{OnePieceCardManagement_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
