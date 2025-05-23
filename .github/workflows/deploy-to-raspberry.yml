@@ -22,7 +22,7 @@ jobs:
       run: dotnet publish OnePieceCardManagement/OnePieceCardManagement.csproj -c Release -r linux-arm64 --self-contained -o OnePieceCardManagement/publish
 
     - name: Copy published files to Raspberry Pi
-      uses: appleboy/scp-action@master
+      uses: appleboy/scp-action
       with:
         host: ${{ secrets.RPI_HOST }}
         username: ${{ secrets.RPI_USER }}
