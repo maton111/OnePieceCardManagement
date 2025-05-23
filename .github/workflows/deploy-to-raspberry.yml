@@ -23,10 +23,10 @@ jobs:
 
     - name: RPI_HOST
       run: echo ${{ secrets.RPI_HOST }}
-    - name: RPI_USER
-      run: echo ${{ secrets.RPI_USER }}
     - name: RPI_SSH_KEY
       run: echo ${{ secrets.RPI_SSH_KEY }}
+    - name: RPI_USER
+      run: echo ${{ secrets.RPI_USER }}
 
     - name: Copy published files to Raspberry Pi
       uses: appleboy/scp-action@master
