@@ -27,7 +27,7 @@ jobs:
         host: ${{ secrets.RPI_HOST }}
         username: ${{ secrets.RPI_USER }}
         key: ${{ secrets.RPI_SSH_KEY }}
-        source: "publish/*"
+        source: "OnePieceCardManagement/publish/*"
         target: "/home/maton/opcm-be"
 
     - name: Restart Raspberry Pi API service
