@@ -179,7 +179,7 @@ namespace OnePieceCardManagement.Controllers
                         token = new JwtSecurityTokenHandler().WriteToken(jwtToken),
                         expiration = jwtToken.ValidTo
                     });
-                    //returning the token...
+                    //returning the token....
 
                 }
             }
