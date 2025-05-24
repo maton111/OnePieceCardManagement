@@ -22,7 +22,7 @@ jobs:
         dotnet-version: 9.0.x
 
     - name: Publish project
-      run: dotnet publish OnePieceCardManagement/OnePieceCardManagement.csproj -c Release -r linux-arm64 --self-contained -o OnePieceCardManagement/publish
+      run: dotnet publish OnePieceCardManagement/OnePieceCardManagement.csproj -c Release -r linux-arm64 --self-contained -o publish
 
     - name: Copy published files to Raspberry Pi
       uses: appleboy/scp-action@master
@@ -30,7 +30,7 @@ jobs:
         host: ${{ secrets.RPI_HOST }}
         username: ${{ secrets.RPI_USER }}
         key: ${{ secrets.RPI_SSH_KEY }}
-        source: "OnePieceCardManagement/publish/*"
+        source: "publish/*"
         target: "/home/maton/opcm-be"
 
     - name: Restart Raspberry Pi API service
@@ -40,4 +40,4 @@ jobs:
         username: ${{ secrets.RPI_USER }}
         key: ${{ secrets.RPI_SSH_KEY }}
         script: |
-          sudo systemctl restart onepiececardmanagement.service
+          sudo systemctl restart opcm.service
