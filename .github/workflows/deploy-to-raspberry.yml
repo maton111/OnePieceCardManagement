@@ -9,6 +9,9 @@ jobs:
   build-and-deploy:
     runs-on: self-hosted
 
+    env:
+      DOTNET_INSTALL_DIR: "./.dotnet"
+
     steps:
     - name: Checkout source
       uses: actions/checkout@v3
