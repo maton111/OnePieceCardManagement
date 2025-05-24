@@ -6,7 +6,6 @@ using Microsoft.OpenApi.Models;
 using OnePieceCardManagement.Data;
 using OnePieceCardManagement.Models;
 using OnePieceCardManagement.Services;
-using Swashbuckle.AspNetCore.Filters;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -46,12 +45,10 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 builder.Services.AddDbContext<DataContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
-);
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.Configure<IdentityOptions>(
-    opts => opts.SignIn.RequireConfirmedEmail = true
-);
+builder.Services.Configure<IdentityOptions>(opts => 
+    opts.SignIn.RequireConfirmedEmail = true);
 
 builder.Services.Configure<DataProtectionTokenProviderOptions>(opts => opts.TokenLifespan = TimeSpan.FromHours(3));
 
