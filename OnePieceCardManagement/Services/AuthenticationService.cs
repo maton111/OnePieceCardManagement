@@ -4,15 +4,15 @@ using OnePieceCardManagement.Models;
 
 namespace OnePieceCardManagement.Services
 {
-    public interface IEmailService
+    public interface IAuthenticationService
     {
         void SendEmail(Message message);
     }
 
-    public class EmailService : IEmailService
+    public class AuthenticationService : IAuthenticationService
     {
         private readonly EmailConfiguration _emailConfig;
-        public EmailService(EmailConfiguration emailConfig) => _emailConfig = emailConfig;
+        public AuthenticationService(EmailConfiguration emailConfig) => _emailConfig = emailConfig;
         public void SendEmail(Message message)
         {
             var emailMessage = CreateEmailMessage(message);
