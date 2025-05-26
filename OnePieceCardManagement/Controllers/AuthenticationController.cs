@@ -23,7 +23,7 @@ namespace OnePieceCardManagement.Controllers
         private readonly UserManager<IdentityUser> _userManager;
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly RoleManager<IdentityRole> _roleManager;
-        private readonly IAuthenticationService _emailService;
+        private readonly IAuthenticationService _authenticationService;
         private readonly IConfiguration _configuration;
         private readonly ILogger<AuthenticationController> _logger;
 
@@ -35,7 +35,7 @@ namespace OnePieceCardManagement.Controllers
         public AuthenticationController(
             UserManager<IdentityUser> userManager,
             RoleManager<IdentityRole> roleManager,
-            IAuthenticationService emailService,
+            IAuthenticationService authenticationService,
             SignInManager<IdentityUser> signInManager,
             IConfiguration configuration,
             ILogger<AuthenticationController> logger)
@@ -43,7 +43,7 @@ namespace OnePieceCardManagement.Controllers
             _userManager = userManager;
             _roleManager = roleManager;
             _signInManager = signInManager;
-            _emailService = emailService;
+            _authenticationService = authenticationService;
             _configuration = configuration;
             _logger = logger;
         }
@@ -133,7 +133,7 @@ namespace OnePieceCardManagement.Controllers
                     new { token, email = user.Email }, Request.Scheme);
 
                 var message = new Message(new string[] { user.Email }, "Email Confirmation", confirmationLink!);
-                _emailService.SendEmail(message);
+                _authenticationService.SendEmail(message);
 
                 _logger.LogInformation("User {Email} registered successfully", user.Email);
 
@@ -261,7 +261,7 @@ namespace OnePieceCardManagement.Controllers
 
                     var twoFactorToken = await _userManager.GenerateTwoFactorTokenAsync(user, "Email");
                     var message = new Message(new string[] { user.Email! }, "OTP Verification", twoFactorToken);
-                    _emailService.SendEmail(message);
+                    _authenticationService.SendEmail(message);
 
                     _logger.LogInformation("2FA token sent to user: {Email}", user.Email);
                     return Ok(new ApiResponse<object>
@@ -395,9 +395,9 @@ namespace OnePieceCardManagement.Controllers
                     });
                 }
 
-                // In produzione, dovresti verificare il refresh token contro il database
-                // Per ora simuliamo la validazione
-                if (!IsValidRefreshToken(model.RefreshToken))
+                // Valida il refresh token contro il database
+                var isValidRefreshToken = await _authenticationService.ValidateRefreshTokenAsync(model.RefreshToken, user.Id);
+                if (!isValidRefreshToken)
                 {
                     _logger.LogWarning("Invalid refresh token for user: {Username}", user.UserName);
                     return BadRequest(new ApiResponse<object>
@@ -408,6 +408,10 @@ namespace OnePieceCardManagement.Controllers
                     });
                 }
 
+                // Revoca il refresh token utilizzato
+                await _authenticationService.RevokeRefreshTokenAsync(model.RefreshToken);
+
+                // Genera nuovi token
                 var tokenResponse = await GenerateTokensAsync(user);
 
                 _logger.LogInformation("Token refreshed for user: {Email}", user.Email);
@@ -437,7 +441,13 @@ namespace OnePieceCardManagement.Controllers
         {
             try
             {
-                // In produzione, invalida il refresh token nel database
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (!string.IsNullOrEmpty(userId))
+                {
+                    // Revoca tutti i refresh token dell'utente
+                    await _authenticationService.RevokeAllUserRefreshTokensAsync(userId);
+                }
+
                 await _signInManager.SignOutAsync();
 
                 _logger.LogInformation("User logged out successfully");
@@ -493,7 +503,7 @@ namespace OnePieceCardManagement.Controllers
                     new { token, email = user.Email }, Request.Scheme);
 
                 var message = new Message(new string[] { user.Email }, "Password Reset", resetLink!);
-                _emailService.SendEmail(message);
+                _authenticationService.SendEmail(message);
 
                 _logger.LogInformation("Password reset email sent to: {Email}", user.Email);
                 return Ok(new ApiResponse<object>
@@ -600,6 +610,107 @@ namespace OnePieceCardManagement.Controllers
             }
         }
 
+        [HttpPost("revoke-token")]
+        [Authorize]
+        public async Task<IActionResult> RevokeToken([FromBody] RevokeTokenModel model)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(model?.RefreshToken))
+                {
+                    return BadRequest(new ApiResponse<object>
+                    {
+                        IsSuccess = false,
+                        Message = "Refresh token is required",
+                        StatusCode = 400
+                    });
+                }
+
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized(new ApiResponse<object>
+                    {
+                        IsSuccess = false,
+                        Message = "User not found",
+                        StatusCode = 401
+                    });
+                }
+
+                // Verifica che il token appartenga all'utente corrente
+                var isValid = await _authenticationService.ValidateRefreshTokenAsync(model.RefreshToken, userId);
+                if (!isValid)
+                {
+                    return BadRequest(new ApiResponse<object>
+                    {
+                        IsSuccess = false,
+                        Message = "Invalid refresh token",
+                        StatusCode = 400
+                    });
+                }
+
+                await _authenticationService.RevokeRefreshTokenAsync(model.RefreshToken);
+
+                _logger.LogInformation("Refresh token revoked manually for user: {UserId}", userId);
+                return Ok(new ApiResponse<object>
+                {
+                    IsSuccess = true,
+                    Message = "Token revoked successfully",
+                    StatusCode = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during token revocation");
+                return StatusCode(500, new ApiResponse<object>
+                {
+                    IsSuccess = false,
+                    Message = "An error occurred during token revocation",
+                    StatusCode = 500
+                });
+            }
+        }
+
+        [HttpPost("revoke-all-tokens")]
+        [Authorize]
+        public async Task<IActionResult> RevokeAllTokens()
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized(new ApiResponse<object>
+                    {
+                        IsSuccess = false,
+                        Message = "User not found",
+                        StatusCode = 401
+                    });
+                }
+
+                await _authenticationService.RevokeAllUserRefreshTokensAsync(userId);
+
+                _logger.LogInformation("All refresh tokens revoked for user: {UserId}", userId);
+                return Ok(new ApiResponse<object>
+                {
+                    IsSuccess = true,
+                    Message = "All tokens revoked successfully",
+                    StatusCode = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during all tokens revocation");
+                return StatusCode(500, new ApiResponse<object>
+                {
+                    IsSuccess = false,
+                    Message = "An error occurred during tokens revocation",
+                    StatusCode = 500
+                });
+            }
+        }
+
+
         #region Private Methods
 
         private async Task<TokenResponse> GenerateTokensAsync(IdentityUser user)
@@ -616,12 +727,14 @@ namespace OnePieceCardManagement.Controllers
             authClaims.AddRange(userRoles.Select(role => new Claim(ClaimTypes.Role, role)));
 
             var accessToken = GenerateAccessToken(authClaims);
-            var refreshToken = GenerateRefreshToken();
+
+            // Crea e salva il refresh token nel database
+            var refreshTokenEntity = await _authenticationService.CreateRefreshTokenAsync(user.Id, REFRESH_TOKEN_EXPIRY_DAYS);
 
             return new TokenResponse
             {
                 AccessToken = new JwtSecurityTokenHandler().WriteToken(accessToken),
-                RefreshToken = refreshToken,
+                RefreshToken = refreshTokenEntity.Token,
                 ExpiresAt = accessToken.ValidTo,
                 TokenType = "Bearer"
             };
@@ -642,14 +755,6 @@ namespace OnePieceCardManagement.Controllers
                 claims: authClaims,
                 signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
             );
-        }
-
-        private string GenerateRefreshToken()
-        {
-            var randomNumber = new byte[64];
-            using var rng = RandomNumberGenerator.Create();
-            rng.GetBytes(randomNumber);
-            return Convert.ToBase64String(randomNumber);
         }
 
         private ClaimsPrincipal? GetPrincipalFromExpiredToken(string? token)
@@ -682,13 +787,6 @@ namespace OnePieceCardManagement.Controllers
             {
                 return null;
             }
-        }
-
-        private bool IsValidRefreshToken(string refreshToken)
-        {
-            // In produzione, verifica contro il database
-            // Per ora, controlla solo che non sia vuoto e abbia una lunghezza ragionevole
-            return !string.IsNullOrWhiteSpace(refreshToken) && refreshToken.Length > 20;
         }
 
         #endregion
@@ -725,5 +823,11 @@ namespace OnePieceCardManagement.Controllers
         [Required(ErrorMessage = "Email is required")]
         [EmailAddress(ErrorMessage = "Invalid email format")]
         public string Email { get; set; } = null!;
+    }
+
+    public class RevokeTokenModel
+    {
+        [Required(ErrorMessage = "Refresh token is required")]
+        public string RefreshToken { get; set; } = null!;
     }
 }

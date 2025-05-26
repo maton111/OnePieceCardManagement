@@ -25,6 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="DTOs\" />
     <Folder Include="Presentation\DTOs\" />
   </ItemGroup>
 

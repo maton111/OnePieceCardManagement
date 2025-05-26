@@ -7,6 +7,7 @@ using Microsoft.OpenApi.Models;
 using OnePieceCardManagement.Data;
 using OnePieceCardManagement.Models;
 using OnePieceCardManagement.Services;
+using OnePieceCardManagement.Middleware; // AGGIUNTO
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -166,6 +167,9 @@ builder.Services.AddRateLimiter(options =>
     });
 });
 
+// Background service per la pulizia dei token scaduti
+builder.Services.AddHostedService<TokenCleanupService>(); // AGGIUNTO
+
 // Logging configuration
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
@@ -183,6 +187,10 @@ else
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
+
+// Middleware di gestione delle eccezioni DEVE essere il primo
+app.UseGlobalExceptionMiddleware(); // AGGIUNTO
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -194,8 +202,7 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-    // Production error handling
-    app.UseExceptionHandler("/Error");
+    // In produzione, usa il middleware personalizzato invece di UseExceptionHandler
     app.UseHsts();
 }
 
