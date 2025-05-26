@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace OnePieceCardManagement.Presentation.Models.Authentication.SignUp
+namespace OnePieceCardManagement.DTOs.Authentication.Request
 {
-    public class ResetPassword
+    public class ResetPasswordDto
     {
         [Required]
         public string Password { get; set; } = null!;

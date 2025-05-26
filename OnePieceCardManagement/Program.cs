@@ -5,10 +5,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using OnePieceCardManagement.Data;
-using OnePieceCardManagement.Models;
 using OnePieceCardManagement.Services;
-using OnePieceCardManagement.Middleware; // AGGIUNTO
+using OnePieceCardManagement.Middleware;
+using OnePieceCardManagement.Mappings;
 using System.Text;
+using OnePieceCardManagement.Models.Email;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +17,9 @@ var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
 
 builder.Services.AddControllers();
+
+// Add AutoMapper - ADDED
+builder.Services.AddAutoMapper(typeof(AuthenticationProfile), typeof(CommonProfile));
 
 // Swagger/OpenAPI configuration
 builder.Services.AddEndpointsApiExplorer();
@@ -168,7 +172,7 @@ builder.Services.AddRateLimiter(options =>
 });
 
 // Background service per la pulizia dei token scaduti
-builder.Services.AddHostedService<TokenCleanupService>(); // AGGIUNTO
+builder.Services.AddHostedService<TokenCleanupService>();
 
 // Logging configuration
 builder.Logging.ClearProviders();
@@ -189,7 +193,7 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 
 // Middleware di gestione delle eccezioni DEVE essere il primo
-app.UseGlobalExceptionMiddleware(); // AGGIUNTO
+app.UseGlobalExceptionMiddleware();
 
 if (app.Environment.IsDevelopment())
 {
@@ -211,10 +215,10 @@ app.UseHttpsRedirection();
 // Security headers
 app.Use(async (context, next) =>
 {
-    context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
-    context.Response.Headers.Add("X-Frame-Options", "DENY");
-    context.Response.Headers.Add("X-XSS-Protection", "1; mode=block");
-    context.Response.Headers.Add("Referrer-Policy", "strict-origin-when-cross-origin");
+    context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
+    context.Response.Headers.Append("X-Frame-Options", "DENY");
+    context.Response.Headers.Append("X-XSS-Protection", "1; mode=block");
+    context.Response.Headers.Append("Referrer-Policy", "strict-origin-when-cross-origin");
     await next();
 });
 

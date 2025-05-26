@@ -1,6 +1,4 @@
-﻿
-
-namespace OnePieceCardManagement.Models
+﻿namespace OnePieceCardManagement.Models.Email
 {
     public class EmailConfiguration
     {

@@ -1,17 +1,17 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace OnePieceCardManagement.Models.Authentication.SignUp
+namespace OnePieceCardManagement.DTOs.Authentication.Request
 {
-    public class RegisterUser
+    public class RegisterUserDto
     {
         [Required(ErrorMessage = "User Name is required")]
-        public string? Username { get; set; }
+        public string Username { get; set; } = null!;
 
         [EmailAddress]
         [Required(ErrorMessage = "Email is required")]
-        public string? Email { get; set; }
+        public string Email { get; set; } = null!;
 
         [Required(ErrorMessage = "Password is required")]
-        public string? Password { get; set; }
+        public string Password { get; set; } = null!;
     }
 }

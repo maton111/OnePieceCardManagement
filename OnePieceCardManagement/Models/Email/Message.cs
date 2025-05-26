@@ -1,6 +1,6 @@
 ﻿using MimeKit;
 
-namespace OnePieceCardManagement.Models
+namespace OnePieceCardManagement.Models.Email
 {
     public class Message
     {
