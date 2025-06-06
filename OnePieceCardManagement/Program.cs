@@ -10,6 +10,7 @@ using OnePieceCardManagement.Middleware;
 using OnePieceCardManagement.Mappings;
 using System.Text;
 using OnePieceCardManagement.Models.Email;
+using OnePieceCardManagement.Standards;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -144,8 +145,13 @@ if (emailConfig == null)
 }
 builder.Services.AddSingleton(emailConfig);
 
-// Services
-builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+
+
+builder.Services.AddService();
+builder.Services.AddRepository();
+builder.Services.AddValidator();
+
+
 
 // CORS (se necessario per frontend)
 builder.Services.AddCors(options =>
@@ -206,6 +212,13 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "One Piece Card Management API V1");
+        c.RoutePrefix = string.Empty; // Swagger UI at root
+    });
+
     // In produzione, usa il middleware personalizzato invece di UseExceptionHandler
     app.UseHsts();
 }

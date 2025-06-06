@@ -1,10 +1,12 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OnePieceCardManagement.DTOs.Authentication.Request;
 using OnePieceCardManagement.DTOs.Authentication.Response;
 using OnePieceCardManagement.DTOs.Common;
 using OnePieceCardManagement.DTOs.Email;
 using OnePieceCardManagement.Services;
+using System.Data;
 using System.Security.Claims;
 
 namespace OnePieceCardManagement.Controllers
@@ -38,26 +40,14 @@ namespace OnePieceCardManagement.Controllers
                 });
             }
 
-            // Validation
-            if (string.IsNullOrWhiteSpace(registerUserDto?.Email) || string.IsNullOrWhiteSpace(registerUserDto?.Username))
-            {
-                return BadRequest(new ApiResponseDto<object>
-                {
-                    IsSuccess = false,
-                    Message = "Email and Username are required",
-                    StatusCode = 400
-                });
-            }
-
             var result = await _authenticationService.RegisterAsync(registerUserDto, role);
 
-            // Send confirmation email if registration was successful
             if (result.IsSuccess)
             {
-                var token = await GetEmailConfirmationToken(registerUserDto.Email);
-                var confirmationLink = Url.Action(nameof(ConfirmEmail), "Authentication",
+                // Send confirmation email if registration was successful
+                var token = await _authenticationService.GetEmailConfirmationToken(registerUserDto.Email);
+                var confirmationLink = Url.Action(nameof(_authenticationService.ConfirmEmailAsync), "Authentication",
                     new { token, email = registerUserDto.Email }, Request.Scheme);
-
                 var messageDto = new MessageDto(new string[] { registerUserDto.Email }, "Email Confirmation", confirmationLink!);
                 _authenticationService.SendEmail(messageDto);
             }
@@ -79,6 +69,35 @@ namespace OnePieceCardManagement.Controllers
             }
 
             var result = await _authenticationService.ConfirmEmailAsync(token, email);
+            return StatusCode(result.StatusCode, result);
+        }
+
+        [HttpGet("resend-confirm-email")]
+        public async Task<IActionResult> ResendEmailConfirmation(string email)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ApiResponseDto<object>
+                {
+                    IsSuccess = false,
+                    Message = "Invalid input data",
+                    StatusCode = 400,
+                    Response = ModelState
+                });
+            }
+
+            var result = await _authenticationService.ResendEmailConfirmationAsync(email);
+
+            if (result.IsSuccess)
+            {
+                // Send confirmation email if registration was successful
+                var token = await _authenticationService.GetEmailConfirmationToken(email);
+                var confirmationLink = Url.Action(nameof(_authenticationService.ConfirmEmailAsync), "Authentication",
+                    new { token, email }, Request.Scheme);
+                var messageDto = new MessageDto(new string[] { email }, "Email Confirmation", confirmationLink!);
+                _authenticationService.SendEmail(messageDto);
+            }
+
             return StatusCode(result.StatusCode, result);
         }
 
@@ -233,14 +252,6 @@ namespace OnePieceCardManagement.Controllers
 
             var result = await _authenticationService.RevokeAllTokensAsync(userId);
             return StatusCode(result.StatusCode, result);
-        }
-
-        // Private helper method - this would need to be injected or moved to service
-        private async Task<string> GetEmailConfirmationToken(string email)
-        {
-            // This is a simplified version - in real implementation, 
-            // this would need access to UserManager through the service
-            return await Task.FromResult("dummy-token");
         }
     }
 }

@@ -27,20 +27,22 @@ namespace OnePieceCardManagement.Mappings
             CreateMap<RefreshToken, OnePieceCardManagement.DTOs.RefreshTokenDto>()
                 .ForMember(dest => dest.IsRevoked, opt => opt.MapFrom(src => src.IsRevoked))
                 .ForMember(dest => dest.IsExpired, opt => opt.MapFrom(src => src.IsExpired))
-                .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => src.IsActive));
+                .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => src.IsActive))
+                .ReverseMap();
 
             CreateMap<OnePieceCardManagement.DTOs.RefreshTokenDto, RefreshToken>()
                 .ForMember(dest => dest.User, opt => opt.Ignore())
                 .ForMember(dest => dest.IsRevoked, opt => opt.Ignore())
                 .ForMember(dest => dest.IsExpired, opt => opt.Ignore())
-                .ForMember(dest => dest.IsActive, opt => opt.Ignore());
+                .ForMember(dest => dest.IsActive, opt => opt.Ignore())
+                .ReverseMap();
 
             // Message mappings
             CreateMap<MessageDto, Message>()
-                .ConstructUsing(src => new Message(src.To, src.Subject, src.Content));
+                .ConstructUsing(src => new Message(src.To, src.Subject, src.Content)).ReverseMap();
 
             CreateMap<Message, MessageDto>()
-                .ForMember(dest => dest.To, opt => opt.MapFrom(src => src.To.Select(x => x.Address)));
+                .ForMember(dest => dest.To, opt => opt.MapFrom(src => src.To.Select(x => x.Address))).ReverseMap();
         }
     }
 }
