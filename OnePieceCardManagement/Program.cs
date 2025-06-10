@@ -11,6 +11,9 @@ using OnePieceCardManagement.Mappings;
 using System.Text;
 using OnePieceCardManagement.Models.Email;
 using OnePieceCardManagement.Standards;
+using Microsoft.Extensions.Options;
+using Minio;
+using OnePieceCardManagement.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,7 +23,9 @@ var configuration = builder.Configuration;
 builder.Services.AddControllers();
 
 // Add AutoMapper - ADDED
-builder.Services.AddAutoMapper(typeof(AuthenticationProfile), typeof(CommonProfile));
+builder.Services.AddAutoMapper(typeof(AuthenticationProfile),
+                               typeof(CommonProfile),
+                               typeof(TattoosProfile));
 
 // Swagger/OpenAPI configuration
 builder.Services.AddEndpointsApiExplorer();
@@ -58,6 +63,25 @@ builder.Services.AddSwaggerGen(options =>
         }
     });
 });
+
+// Load MinIO configuration
+builder.Services.Configure<MinioConfiguration>(
+    builder.Configuration.GetSection("MinIO"));
+
+// Register MinIO client
+builder.Services.AddSingleton<IMinioClient>(serviceProvider =>
+{
+    var config = serviceProvider.GetRequiredService<IOptions<MinioConfiguration>>().Value;
+
+    return new MinioClient()
+        .WithEndpoint(config.Endpoint)
+        .WithCredentials(config.AccessKey, config.SecretKey)
+        .WithSSL(config.UseSSL)
+        .Build();
+});
+
+// Register MinIO service
+builder.Services.AddScoped<IMinioService, MinioService>();
 
 // Database configuration
 builder.Services.AddDbContext<DataContext>(options =>
@@ -156,12 +180,12 @@ builder.Services.AddValidator();
 // CORS (se necessario per frontend)
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowSpecificOrigins", policy =>
+    options.AddPolicy("AllowAllOrigins", policy =>
     {
-        policy.WithOrigins("http://localhost:3000", "https://localhost:3000")
+        policy.AllowAnyOrigin()
               .AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials();
+              .AllowAnyHeader();
+              //.AllowCredentials();
     });
 });
 
@@ -235,7 +259,7 @@ app.Use(async (context, next) =>
     await next();
 });
 
-app.UseCors("AllowSpecificOrigins");
+app.UseCors("AllowAllOrigins");
 app.UseRateLimiter();
 
 app.UseAuthentication();

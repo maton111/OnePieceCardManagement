@@ -1,0 +1,70 @@
+﻿{
+   "CodeGenerationMode": 5,
+   "ContextClassName": "DataContext",
+   "ContextNamespace": null,
+   "FilterSchemas": false,
+   "IncludeConnectionString": false,
+   "ModelNamespace": null,
+   "OutputContextPath": "Data",
+   "OutputPath": "Models",
+   "PreserveCasingWithRegex": true,
+   "ProjectRootNamespace": "OnePieceCardManagement",
+   "Schemas": null,
+   "SelectedHandlebarsLanguage": 2,
+   "SelectedToBeGenerated": 0,
+   "T4TemplatePath": null,
+   "Tables": [
+      {
+         "Name": "public.RefreshTokens",
+         "ObjectType": 0
+      },
+      {
+         "Name": "public.tattoo_positions",
+         "ObjectType": 0
+      },
+      {
+         "Name": "public.tattoo_styles",
+         "ObjectType": 0
+      },
+      {
+         "Name": "public.tattoos",
+         "ObjectType": 0
+      },
+      {
+         "Name": "public.tattoo_statistics",
+         "ObjectType": 3
+      },
+      {
+         "Name": "public.tattoos_by_position",
+         "ObjectType": 3
+      },
+      {
+         "Name": "public.tattoos_by_style",
+         "ObjectType": 3
+      }
+   ],
+   "UiHint": null,
+   "UncountableWords": null,
+   "UseAsyncStoredProcedureCalls": true,
+   "UseBoolPropertiesWithoutDefaultSql": false,
+   "UseDatabaseNames": false,
+   "UseDateOnlyTimeOnly": false,
+   "UseDbContextSplitting": false,
+   "UseDecimalDataAnnotationForSprocResult": true,
+   "UseFluentApiOnly": false,
+   "UseHandleBars": false,
+   "UseHierarchyId": false,
+   "UseInflector": false,
+   "UseLegacyPluralizer": false,
+   "UseManyToManyEntity": false,
+   "UseNoDefaultConstructor": false,
+   "UseNoNavigations": false,
+   "UseNoObjectFilter": false,
+   "UseNodaTime": false,
+   "UseNullableReferences": false,
+   "UsePrefixNavigationNaming": false,
+   "UseSchemaFolders": false,
+   "UseSchemaNamespaces": false,
+   "UseSpatial": false,
+   "UseT4": false
+}

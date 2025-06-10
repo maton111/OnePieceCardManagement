@@ -6,5 +6,6 @@
         public string? Message { get; set; }
         public int StatusCode { get; set; }
         public T? Response { get; set; }
+        public object? Errors { get; set; }
     }
 }
