@@ -27,6 +27,11 @@ builder.Services.AddAutoMapper(typeof(AuthenticationProfile),
                                typeof(CommonProfile),
                                typeof(TattoosProfile));
 
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.ListenAnyIP(7232); // Listen on all network interfaces
+});
+
 // Swagger/OpenAPI configuration
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
