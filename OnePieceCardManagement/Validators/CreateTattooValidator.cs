@@ -20,7 +20,7 @@ namespace OnePieceCardManagement.Validators
                 .MaximumLength(100).WithMessage("Style must not exceed 100 characters");
 
             RuleFor(x => x.AveragePrice)
-                .GreaterThan(0).WithMessage("Average price must be greater than 0")
+                .GreaterThanOrEqualTo(0).WithMessage("Average price must be greater or equal than 0")
                 .LessThanOrEqualTo(999999.99m).WithMessage("Average price is too high");
 
             RuleFor(x => x.Rating)
